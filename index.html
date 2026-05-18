@@ -12,7 +12,6 @@
             --card-bg: #ffffff;
         }
         body {
-            /* 優先使用 Calibri 與 微軟正黑體 */
             font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
             background-color: var(--bg-color);
             color: var(--primary-color);
@@ -32,7 +31,6 @@
         }
         h1 {
             text-align: center;
-            color: var(--primary-color);
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 10px;
             margin-bottom: 30px;
@@ -60,11 +58,6 @@
             font-size: 1em;
             font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
         }
-        input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-        }
         .result-section {
             margin-top: 30px;
             padding: 25px;
@@ -82,13 +75,17 @@
             font-weight: bold;
             color: #d35400;
         }
-        .footer-note {
-            font-size: 0.85em;
-            color: #7f8c8d;
-            margin-top: 25px;
-            text-align: center;
-            border-top: 1px dashed #ccc;
-            padding-top: 15px;
+        /* 下方資訊格式設定 */
+        .footer-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 0.95em;
+            color: #555;
+            line-height: 1.8;
+        }
+        .footer-item {
+            display: block;
         }
         @media (max-width: 600px) {
             .grid-container { grid-template-columns: 1fr; }
@@ -117,7 +114,6 @@
             <label>面密度 (mg/cm²)</label>
             <input type="number" id="arealDensity" value="12.70" step="0.01" oninput="calculate()">
         </div>
-
         <div class="input-group">
             <label>塗佈有效幅寬 (mm)</label>
             <input type="number" id="coatingWidth" value="255" step="1" oninput="calculate()">
@@ -155,15 +151,16 @@
         </div>
     </div>
 
-    <div class="footer-note">
-        字型規範：中文使用微軟正黑體，英文使用 Calibri。<br>
-        ※ 本工具計算結果基於理論公式，實務請考量實際調機損耗。
+    <div class="footer-info">
+        <span class="footer-item">拜訪次數：<span id="visitCount">20</span> 次</span>
+        <span class="footer-item">作者：SJ</span>
+        <span class="footer-item">版本：v1.5.1</span>
+        <span class="footer-item">最後更新日期：2026-03-16</span>
     </div>
 </div>
 
 <script>
 function calculate() {
-    // 獲取參數
     const wPerB = parseFloat(document.getElementById('weightPerBucket').value) || 0;
     const bCount = parseFloat(document.getElementById('bucketCount').value) || 0;
     const sc = parseFloat(document.getElementById('solidContent').value) || 0;
@@ -173,31 +170,21 @@ function calculate() {
     const up = parseFloat(document.getElementById('upCount').value) || 0;
     const loss = parseFloat(document.getElementById('lossRate').value) || 0;
 
-    // 1. 計算總乾料 (kg)
     let totalSlurryG = wPerB * bCount * 1000;
     let dryWeightG = totalSlurryG * (sc / 100);
-
-    // 2. 計算總塗佈面積 (cm2) 並換算長度 (m)
     let areaCm2 = dryWeightG / (ad / 1000);
-    // 雙面塗佈，長度 = 總面積 / (幅寬cm * 2)
     let lengthCm = areaCm2 / ((cw / 10) * 2);
     let lengthM = lengthCm / 100;
-    
-    // 考慮損耗
     let actualLengthM = lengthM * (1 - (loss / 100));
-
-    // 3. 計算極片數量
     let rows = Math.floor((actualLengthM * 1000) / ph);
     let totalPieces = rows * up;
 
-    // 更新介面
     document.getElementById('dryWeightOut').innerText = (dryWeightG / 1000).toFixed(3) + " kg";
     document.getElementById('lengthMOut').innerText = lengthM.toFixed(2) + " m";
     document.getElementById('actualLengthMOut').innerText = actualLengthM.toFixed(2) + " m";
     document.getElementById('totalPiecesOut').innerText = totalPieces.toLocaleString() + " 片";
 }
 
-// 頁面加載後自動計算一次
 window.onload = calculate;
 </script>
 
