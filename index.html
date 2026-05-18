@@ -96,12 +96,13 @@
             color: #555;
             text-align: center; 
         }
-        .footer-item { display: block; margin-bottom: 4px; }
+        .footer-item { display: block; margin-bottom: 8px; }
         
         /* 計次器圖片調整 */
-        #visitor-counter {
+        .counter-img {
+            height: 24px;
             vertical-align: middle;
-            margin-left: 5px;
+            margin: 0 5px;
         }
 
         @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
@@ -178,27 +179,26 @@
             <span class="result-value" id="effectiveSlurryOut">-</span>
         </div>
         <div class="result-item">
-            <span>理論總長度：</span>
+            <span>理論可塗佈長度：</span>
             <span class="result-value" id="theoryLengthOut">-</span>
         </div>
         <div class="result-item">
-            <span>扣除損耗後可用長度：</span>
+            <span>實際可用長度：</span>
             <span class="result-value" style="color: #27ae60;" id="finalLengthOut">-</span>
         </div>
         <div class="result-item" style="border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
-            <span>最終可產出極片數量：</span>
+            <span>實際可產出極片數量：</span>
             <span class="result-value" style="font-size: 1.5em;" id="totalPiecesOut">-</span>
         </div>
     </div>
 
     <div class="footer-info">
-        <span class="footer-item">
-            拜訪次數：<img id="visitor-counter" src="https://counter.dev/track.png?id=vj780922-sheet-calc" alt="counter" style="display:none;" />
-            <img src="https://count.getloli.com/get/@vj780922-sheet-calc?theme=rule_34" alt="hits" style="height: 20px; vertical-align: middle;"> 次
-        </span>
-        <span class="footer-item">作者：SJ</span>
-        <span class="footer-item">版本：v1.5.1</span>
-        <span class="footer-item">最後更新日期：<span id="update-date"></span></span>
+        <div class="footer-item">
+            拜訪次數：<img src="https://moe-counter.glitch.me/get/@vj780922-sheet-calc?theme=asoul" class="counter-img" alt="Hits"> 次
+        </div>
+        <div class="footer-item">作者：SJ</div>
+        <div class="footer-item">版本：v1.1.1</div>
+        <div class="footer-item">最後更新日期：<span id="update-date"></span></div>
     </div>
 </div>
 
@@ -236,7 +236,6 @@ function calculate() {
     document.getElementById('totalPiecesOut').innerText = totalPieces.toLocaleString() + " 片";
 }
 
-// 自動獲取日期
 function setDate() {
     const today = new Date();
     const yyyy = today.getFullYear();
