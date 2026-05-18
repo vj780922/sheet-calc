@@ -10,6 +10,7 @@
             --accent-color: #3498db;
             --bg-color: #f4f7f6;
             --card-bg: #ffffff;
+            --error-color: #e74c3c;
         }
         body {
             font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
@@ -58,6 +59,10 @@
             font-size: 1em;
             font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
         }
+        input.highlight {
+            border-color: var(--error-color);
+            background-color: #fff5f5;
+        }
         .result-section {
             margin-top: 30px;
             padding: 25px;
@@ -75,7 +80,6 @@
             font-weight: bold;
             color: #d35400;
         }
-        /* 下方資訊格式設定 */
         .footer-info {
             margin-top: 30px;
             padding-top: 20px;
@@ -107,6 +111,10 @@
             <input type="number" id="bucketCount" value="2" step="1" oninput="calculate()">
         </div>
         <div class="input-group">
+            <label>過濾器/管路料損 (kg)</label>
+            <input type="number" id="filterLoss" class="highlight" value="1.6" step="0.1" oninput="calculate()">
+        </div>
+        <div class="input-group">
             <label>固含量 (%)</label>
             <input type="number" id="solidContent" value="57.10" step="0.01" oninput="calculate()">
         </div>
@@ -127,12 +135,16 @@
             <input type="number" id="upCount" value="2" step="1" oninput="calculate()">
         </div>
         <div class="input-group">
-            <label>製程損耗率 (%)</label>
+            <label>其他製程損耗率 (%)</label>
             <input type="number" id="lossRate" value="3" step="0.1" oninput="calculate()">
         </div>
     </div>
 
     <div class="result-section">
+        <div class="result-item">
+            <span>有效漿料量 (扣除過濾器損耗)：</span>
+            <span class="result-value" id="effectiveSlurryOut">-</span>
+        </div>
         <div class="result-item">
             <span>總乾料重量：</span>
             <span class="result-value" id="dryWeightOut">-</span>
@@ -142,17 +154,17 @@
             <span class="result-value" id="lengthMOut">-</span>
         </div>
         <div class="result-item">
-            <span>考慮損耗後有效長度：</span>
+            <span>考慮 3% 損耗後有效長度：</span>
             <span class="result-value" id="actualLengthMOut">-</span>
         </div>
         <div class="result-item" style="border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
-            <span>預估極片產出總量：</span>
+            <span>實際可產出極片總量：</span>
             <span class="result-value" style="font-size: 1.4em;" id="totalPiecesOut">-</span>
         </div>
     </div>
 
     <div class="footer-info">
-        <span class="footer-item">拜訪次數：<span id="visitCount">20</span> 次</span>
+        <span class="footer-item">拜訪次數：20 次</span>
         <span class="footer-item">作者：SJ</span>
         <span class="footer-item">版本：v1.5.1</span>
         <span class="footer-item">最後更新日期：2026-03-16</span>
@@ -161,8 +173,10 @@
 
 <script>
 function calculate() {
+    // 讀取參數
     const wPerB = parseFloat(document.getElementById('weightPerBucket').value) || 0;
     const bCount = parseFloat(document.getElementById('bucketCount').value) || 0;
+    const fLoss = parseFloat(document.getElementById('filterLoss').value) || 0;
     const sc = parseFloat(document.getElementById('solidContent').value) || 0;
     const ad = parseFloat(document.getElementById('arealDensity').value) || 0;
     const cw = parseFloat(document.getElementById('coatingWidth').value) || 0;
@@ -170,15 +184,28 @@ function calculate() {
     const up = parseFloat(document.getElementById('upCount').value) || 0;
     const loss = parseFloat(document.getElementById('lossRate').value) || 0;
 
-    let totalSlurryG = wPerB * bCount * 1000;
+    // 1. 計算有效漿料量 (kg)
+    let totalSlurryKg = (wPerB * bCount) - fLoss;
+    if (totalSlurryKg < 0) totalSlurryKg = 0;
+    
+    // 2. 計算總乾料 (kg)
+    let totalSlurryG = totalSlurryKg * 1000;
     let dryWeightG = totalSlurryG * (sc / 100);
+
+    // 3. 計算長度 (m)
     let areaCm2 = dryWeightG / (ad / 1000);
     let lengthCm = areaCm2 / ((cw / 10) * 2);
     let lengthM = lengthCm / 100;
+    
+    // 考慮額外損耗
     let actualLengthM = lengthM * (1 - (loss / 100));
+
+    // 4. 計算片數
     let rows = Math.floor((actualLengthM * 1000) / ph);
     let totalPieces = rows * up;
 
+    // 更新介面顯示
+    document.getElementById('effectiveSlurryOut').innerText = totalSlurryKg.toFixed(2) + " kg";
     document.getElementById('dryWeightOut').innerText = (dryWeightG / 1000).toFixed(3) + " kg";
     document.getElementById('lengthMOut').innerText = lengthM.toFixed(2) + " m";
     document.getElementById('actualLengthMOut').innerText = actualLengthM.toFixed(2) + " m";
