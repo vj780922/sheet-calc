@@ -12,6 +12,7 @@
             --card-bg: #ffffff;
             --preset-bg: #d4edda; /* 綠底 */
             --loss-bg: #e2e3e5;   /* 灰底 */
+            --size-bg: #fff3cd;   /* 黃底 (極片尺寸) */
         }
         body {
             font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
@@ -46,6 +47,7 @@
         }
         .bg-preset { background-color: var(--preset-bg); color: #155724; }
         .bg-loss { background-color: var(--loss-bg); color: #383d41; }
+        .bg-size { background-color: var(--size-bg); color: #856404; }
 
         .grid-container {
             display: grid;
@@ -57,6 +59,7 @@
         }
         .grid-preset { background-color: rgba(212, 237, 218, 0.3); border: 1px solid var(--preset-bg); }
         .grid-loss { background-color: rgba(226, 227, 229, 0.3); border: 1px solid var(--loss-bg); }
+        .grid-size { background-color: rgba(255, 243, 205, 0.3); border: 1px solid var(--size-bg); }
 
         .input-group label {
             display: block;
@@ -84,14 +87,18 @@
             margin-bottom: 10px;
         }
         .result-value { font-weight: bold; color: #d35400; }
+        
+        /* 底部資訊置中 */
         .footer-info {
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid #eee;
             font-size: 0.9em;
             color: #555;
+            text-align: center; 
         }
-        .footer-item { display: block; }
+        .footer-item { display: block; margin-bottom: 4px; }
+        
         @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -100,7 +107,7 @@
 <div class="container">
     <h1>漿料換算極片數量計算機 (R8)</h1>
     
-    <div class="section-title bg-preset">預制設定</div>
+    <div class="section-title bg-preset">漿料資訊</div>
     <div class="grid-container grid-preset">
         <div class="input-group">
             <label>投入桶數</label>
@@ -120,7 +127,23 @@
         </div>
     </div>
 
-    <div class="section-title bg-loss">固定損耗設定</div>
+    <div class="section-title bg-size">極片尺寸</div>
+    <div class="grid-container grid-size">
+        <div class="input-group">
+            <label>塗佈幅寬 (mm)</label>
+            <input type="number" id="coatingWidth" value="255" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>極片高度 (mm)</label>
+            <input type="number" id="pieceHeight" value="124" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>模數 (up)</label>
+            <input type="number" id="upCount" value="2" oninput="calculate()">
+        </div>
+    </div>
+
+    <div class="section-title bg-loss">固定損耗</div>
     <div class="grid-container grid-loss">
         <div class="input-group">
             <label>過濾器/管路料損 (kg)</label>
@@ -138,10 +161,6 @@
             <label>製片損耗 (m)</label>
             <input type="number" id="sliceLossM" value="3" step="0.5" oninput="calculate()">
         </div>
-    </div>
-
-    <div class="input-group" style="padding: 0 15px;">
-        <label>塗佈幅寬: 255mm | 極片高度: 124mm | 模數: 2</label>
     </div>
 
     <div class="result-section">
@@ -173,21 +192,19 @@
 
 <script>
 function calculate() {
-    // 讀取數值
     const bCount = parseFloat(document.getElementById('bucketCount').value) || 0;
     const wPerB = parseFloat(document.getElementById('weightPerBucket').value) || 0;
     const sc = parseFloat(document.getElementById('solidContent').value) || 0;
     const ad = parseFloat(document.getElementById('arealDensity').value) || 0;
     
+    const cw = parseFloat(document.getElementById('coatingWidth').value) || 0;
+    const ph = parseFloat(document.getElementById('pieceHeight').value) || 0;
+    const up = parseFloat(document.getElementById('upCount').value) || 0;
+
     const fLoss = parseFloat(document.getElementById('filterLoss').value) || 0;
     const coatL = parseFloat(document.getElementById('coatLossM').value) || 0;
     const rollL = parseFloat(document.getElementById('rollLossM').value) || 0;
     const sliceL = parseFloat(document.getElementById('sliceLossM').value) || 0;
-
-    // 固定規格
-    const cw = 255; 
-    const ph = 124;
-    const up = 2;
 
     // 1. 計算有效漿料
     let effectiveSlurryKg = (bCount * wPerB) - fLoss;
@@ -196,6 +213,7 @@ function calculate() {
     // 2. 計算理論長度
     let dryWeightG = (effectiveSlurryKg * 1000) * (sc / 100);
     let areaCm2 = dryWeightG / (ad / 1000);
+    // 雙面塗佈計算
     let theoryLengthM = (areaCm2 / ((cw / 10) * 2)) / 100;
 
     // 3. 扣除固定長度損耗
