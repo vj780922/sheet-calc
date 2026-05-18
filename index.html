@@ -10,9 +10,9 @@
             --accent-color: #3498db;
             --bg-color: #f4f7f6;
             --card-bg: #ffffff;
-            --preset-bg: #d4edda; /* 綠底 */
-            --loss-bg: #e2e3e5;   /* 灰底 */
-            --size-bg: #fff3cd;   /* 黃底 (極片尺寸) */
+            --preset-bg: #d4edda;
+            --loss-bg: #e2e3e5;
+            --size-bg: #fff3cd;
         }
         body {
             font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
@@ -88,7 +88,6 @@
         }
         .result-value { font-weight: bold; color: #d35400; }
         
-        /* 底部資訊置中 */
         .footer-info {
             margin-top: 30px;
             padding-top: 20px;
@@ -99,6 +98,12 @@
         }
         .footer-item { display: block; margin-bottom: 4px; }
         
+        /* 計次器圖片調整 */
+        #visitor-counter {
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
         @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -130,7 +135,11 @@
     <div class="section-title bg-size">極片尺寸</div>
     <div class="grid-container grid-size">
         <div class="input-group">
-            <label>塗佈幅寬 (mm)</label>
+            <label>箔材幅寬 (mm)</label>
+            <input type="number" id="foilWidth" value="320" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>塗佈有效幅寬 (mm)</label>
             <input type="number" id="coatingWidth" value="255" oninput="calculate()">
         </div>
         <div class="input-group">
@@ -183,10 +192,13 @@
     </div>
 
     <div class="footer-info">
-        <span class="footer-item">拜訪次數：20 次</span>
+        <span class="footer-item">
+            拜訪次數：<img id="visitor-counter" src="https://counter.dev/track.png?id=vj780922-sheet-calc" alt="counter" style="display:none;" />
+            <img src="https://count.getloli.com/get/@vj780922-sheet-calc?theme=rule_34" alt="hits" style="height: 20px; vertical-align: middle;"> 次
+        </span>
         <span class="footer-item">作者：SJ</span>
         <span class="footer-item">版本：v1.5.1</span>
-        <span class="footer-item">最後更新日期：2026-03-16</span>
+        <span class="footer-item">最後更新日期：<span id="update-date"></span></span>
     </div>
 </div>
 
@@ -206,30 +218,37 @@ function calculate() {
     const rollL = parseFloat(document.getElementById('rollLossM').value) || 0;
     const sliceL = parseFloat(document.getElementById('sliceLossM').value) || 0;
 
-    // 1. 計算有效漿料
     let effectiveSlurryKg = (bCount * wPerB) - fLoss;
     if (effectiveSlurryKg < 0) effectiveSlurryKg = 0;
 
-    // 2. 計算理論長度
     let dryWeightG = (effectiveSlurryKg * 1000) * (sc / 100);
     let areaCm2 = dryWeightG / (ad / 1000);
-    // 雙面塗佈計算
     let theoryLengthM = (areaCm2 / ((cw / 10) * 2)) / 100;
 
-    // 3. 扣除固定長度損耗
     let finalLengthM = theoryLengthM - coatL - rollL - sliceL;
     if (finalLengthM < 0) finalLengthM = 0;
 
-    // 4. 計算片數
     let totalPieces = Math.floor((finalLengthM * 1000) / ph) * up;
 
-    // 顯示結果
     document.getElementById('effectiveSlurryOut').innerText = effectiveSlurryKg.toFixed(2) + " kg";
     document.getElementById('theoryLengthOut').innerText = theoryLengthM.toFixed(2) + " m";
     document.getElementById('finalLengthOut').innerText = finalLengthM.toFixed(2) + " m";
     document.getElementById('totalPiecesOut').innerText = totalPieces.toLocaleString() + " 片";
 }
-window.onload = calculate;
+
+// 自動獲取日期
+function setDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('update-date').innerText = `${yyyy}-${mm}-${dd}`;
+}
+
+window.onload = function() {
+    calculate();
+    setDate();
+};
 </script>
 
 </body>
