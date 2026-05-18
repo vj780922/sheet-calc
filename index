@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漿料換算極片數量計算機</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+        body {
+            /* 優先使用 Calibri 與 微軟正黑體 */
+            font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+            font-family: 'Calibri', 'Microsoft JhengHei', sans-serif;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        .result-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #eef2f3;
+            border-radius: 8px;
+            border-left: 6px solid var(--accent-color);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+        }
+        .result-value {
+            font-weight: bold;
+            color: #d35400;
+        }
+        .footer-note {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 25px;
+            text-align: center;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+        @media (max-width: 600px) {
+            .grid-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>漿料換算極片數量計算機 (R8)</h1>
+    
+    <div class="grid-container">
+        <div class="input-group">
+            <label>單桶漿料重量 (kg)</label>
+            <input type="number" id="weightPerBucket" value="11" step="0.1" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>投入桶數</label>
+            <input type="number" id="bucketCount" value="2" step="1" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>固含量 (%)</label>
+            <input type="number" id="solidContent" value="57.10" step="0.01" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>面密度 (mg/cm²)</label>
+            <input type="number" id="arealDensity" value="12.70" step="0.01" oninput="calculate()">
+        </div>
+
+        <div class="input-group">
+            <label>塗佈有效幅寬 (mm)</label>
+            <input type="number" id="coatingWidth" value="255" step="1" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>單片極片高度 (mm)</label>
+            <input type="number" id="pieceHeight" value="124" step="1" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>橫向模數 (2-up)</label>
+            <input type="number" id="upCount" value="2" step="1" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>製程損耗率 (%)</label>
+            <input type="number" id="lossRate" value="3" step="0.1" oninput="calculate()">
+        </div>
+    </div>
+
+    <div class="result-section">
+        <div class="result-item">
+            <span>總乾料重量：</span>
+            <span class="result-value" id="dryWeightOut">-</span>
+        </div>
+        <div class="result-item">
+            <span>預估極捲總長度 (理論)：</span>
+            <span class="result-value" id="lengthMOut">-</span>
+        </div>
+        <div class="result-item">
+            <span>考慮損耗後有效長度：</span>
+            <span class="result-value" id="actualLengthMOut">-</span>
+        </div>
+        <div class="result-item" style="border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
+            <span>預估極片產出總量：</span>
+            <span class="result-value" style="font-size: 1.4em;" id="totalPiecesOut">-</span>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        字型規範：中文使用微軟正黑體，英文使用 Calibri。<br>
+        ※ 本工具計算結果基於理論公式，實務請考量實際調機損耗。
+    </div>
+</div>
+
+<script>
+function calculate() {
+    // 獲取參數
+    const wPerB = parseFloat(document.getElementById('weightPerBucket').value) || 0;
+    const bCount = parseFloat(document.getElementById('bucketCount').value) || 0;
+    const sc = parseFloat(document.getElementById('solidContent').value) || 0;
+    const ad = parseFloat(document.getElementById('arealDensity').value) || 0;
+    const cw = parseFloat(document.getElementById('coatingWidth').value) || 0;
+    const ph = parseFloat(document.getElementById('pieceHeight').value) || 0;
+    const up = parseFloat(document.getElementById('upCount').value) || 0;
+    const loss = parseFloat(document.getElementById('lossRate').value) || 0;
+
+    // 1. 計算總乾料 (kg)
+    let totalSlurryG = wPerB * bCount * 1000;
+    let dryWeightG = totalSlurryG * (sc / 100);
+
+    // 2. 計算總塗佈面積 (cm2) 並換算長度 (m)
+    let areaCm2 = dryWeightG / (ad / 1000);
+    // 雙面塗佈，長度 = 總面積 / (幅寬cm * 2)
+    let lengthCm = areaCm2 / ((cw / 10) * 2);
+    let lengthM = lengthCm / 100;
+    
+    // 考慮損耗
+    let actualLengthM = lengthM * (1 - (loss / 100));
+
+    // 3. 計算極片數量
+    let rows = Math.floor((actualLengthM * 1000) / ph);
+    let totalPieces = rows * up;
+
+    // 更新介面
+    document.getElementById('dryWeightOut').innerText = (dryWeightG / 1000).toFixed(3) + " kg";
+    document.getElementById('lengthMOut').innerText = lengthM.toFixed(2) + " m";
+    document.getElementById('actualLengthMOut').innerText = actualLengthM.toFixed(2) + " m";
+    document.getElementById('totalPiecesOut').innerText = totalPieces.toLocaleString() + " 片";
+}
+
+// 頁面加載後自動計算一次
+window.onload = calculate;
+</script>
+
+</body>
+</html>
